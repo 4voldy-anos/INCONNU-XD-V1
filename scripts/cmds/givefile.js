@@ -1,36 +1,40 @@
-const fs = require('fs');
+const fs = require("fs");
+const path = require("path");
 
 module.exports = {
- config: {
- name: "givefile",
- aliases: ["file"],
- version: "1.0",
- author: "Chitron Bhattacharjee",
- countDown: 5,
- role: 0,
- description: "extract file",
- category: "owner",
- guide: "{pn} Write a file name"
- },
+  config: {
+    name: "filecmd",
+    aliases: ["file"],
+    version: "1.0",
+    author: "nexo_here",
+    countDown: 5,
+    role: 2,
+    shortDescription: "View code of a command",
+    longDescription: "View the raw source code of any command in the commands folder",
+    category: "owner",
+    guide: "{pn} <commandName>"
+  },
 
- onStart: async function ({ message, args, api, event }) {
- const permission = ["61568791604271"];
- if (!permission.includes(event.senderID)) {
- return api.sendMessage("⩸__ ✨🦋 𝒀𝒐𝒖 𝒅𝒂𝒓𝒆 𝒕𝒐 𝒖𝒔𝒆 𝒕𝒉𝒊𝒔 𝒔𝒂𝒄𝒓𝒆𝒅 𝒄𝒐𝒎𝒎𝒂𝒏𝒅!? 💥\n\n⚠️ 𝒪𝓃𝓁𝓎 𝒕𝒉𝒆 𝒎𝒚𝒕𝒉, 𝒕𝒉𝒆 𝒍𝒆𝒈𝒆𝒏𝒅 — 🧧 𝓒𝓱𝓲𝓽𝓻𝓸𝓷 𝓑𝓱𝓪𝓽𝓽𝓪𝓬𝓱𝓪𝓻𝓳𝓮𝓮 🧧 — 𝒉𝒐𝒍𝒅𝒔 𝒕𝒉𝒆 𝒌𝒆𝒚 𝒕𝒐 𝒖𝒏𝒍𝒆𝒂𝒔𝒉 𝒕𝒉𝒊𝒔 𝒑𝒐𝒘𝒆𝒓~! 🗝️\n\n💢 𝒔𝒕𝒂𝒏𝒅 𝒅𝒐𝒘𝒏, 𝒎𝒐𝒓𝒕𝒂𝒍... 𝒐𝒓 𝒇𝒂𝒄𝒆 𝒕𝒉𝒆 𝒄𝒖𝒓𝒔𝒆 𝒐𝒇 𝒕𝒉𝒆 𝒇𝒐𝒓𝒃𝒊𝒅𝒅𝒆𝒏 𝒇𝒊𝒍𝒆 💀", event.threadID, event.messageID);
+  onStart: async function ({ args, message }) {
+    const cmdName = args[0];
+    if (!cmdName) return message.reply("❌ | Please provide the command name.\nExample: filecmd fluxsnell");
 
- }
+    const cmdPath = path.join(__dirname, `${cmdName}.js`);
+    if (!fs.existsSync(cmdPath)) return message.reply(`❌ | Command "${cmdName}" not found in this folder.`);
 
- const fileName = args[0];
- if (!fileName) {
- return api.sendMessage("🔰 provide a file name!", event.threadID, event.messageID);
- }
+    try {
+      const code = fs.readFileSync(cmdPath, "utf8");
 
- const filePath = __dirname + `/${fileName}.js`;
- if (!fs.existsSync(filePath)) {
- return api.sendMessage(`File not found: ${fileName}.js`, event.threadID, event.messageID);
- }
+      if (code.length > 19000) {
+        return message.reply("⚠️ | This file is too large to display.");
+      }
 
- const fileContent = fs.readFileSync(filePath, 'utf8');
- api.sendMessage({ body: fileContent }, event.threadID);
- }
+      return message.reply({
+        body: `📄 | Source code of "${cmdName}.js":\n\n${code}`
+      });
+    } catch (err) {
+      console.error(err);
+      return message.reply("❌ | Error reading the file.");
+    }
+  }
 };
